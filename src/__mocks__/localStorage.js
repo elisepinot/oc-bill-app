@@ -15,3 +15,5 @@ export const localStorageMock = (function() {
     }
   }
 })()
+
+// Fournit une implémentation factice de l'interface 'localStorage' du navigateur. Cette simulation est souvent utilisée dans les tests pour éviter la dépendance au stockage réel du navigateur, permettant ainsi aux tests de s'exécuter de manière isolée et prévisible.
