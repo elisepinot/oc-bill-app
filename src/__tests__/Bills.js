@@ -5,13 +5,12 @@
 import { screen, waitFor } from '@testing-library/dom'
 import BillsUI from '../views/BillsUI.js'
 import { bills } from '../fixtures/bills.js'
-import { ROUTES_PATH } from '../constants/routes.js'
+import { ROUTES, ROUTES_PATH } from '../constants/routes.js'
 import { localStorageMock } from '../__mocks__/localStorage.js'
 import mockStore from '../__mocks__/store'
 import router from '../app/Router'
-// import Bills from '../containers/Bills.js'
+import Bills from '../containers/Bills.js'
 // import userEvent from '@testing-library/user-event'
-// import { ROUTES } from "../constants/routes.js"
 
 //Given = postulat, When = action, Then = resultat attendu
 describe('Given I am connected as an employee', () => {
@@ -47,6 +46,38 @@ describe('Given I am connected as an employee', () => {
       expect(dates).toEqual(datesSorted)
     })
   })
+})
+
+//Test d'intégration GET
+describe('Given I am a user connected as Employee', () => {
+  describe('When I navigate to Bills', () => {
+    test('fetches bills from mock API GET', async () => {
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({ type: 'Employee', email: 'e@e' })
+      )
+      const root = document.createElement('div')
+      root.setAttribute('id', 'root')
+      document.body.append(root)
+      router()
+      window.onNavigate(ROUTES_PATH.Bills)
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      }
+      // Création d'un nouvel objet Bills avec les dépendances mockées
+      const mockedBills = new Bills({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      })
+      // Récupération des factures
+      const bills = await mockedBills.getBills()
+      // Vérification que la liste des factures n'est pas vide
+      expect(bills.length > 0).toBeTruthy()
+    })
+  })
   describe('When an error occurs on API', () => {
     beforeEach(() => {
       //Utilisation de Jest pour "espionner" la méthode bills du mockStore -> permet de surveiller les appels à cette méthode et de remplacer son comportement par une implémentation mockée dans les tests.
@@ -57,7 +88,7 @@ describe('Given I am connected as an employee', () => {
         'user',
         JSON.stringify({
           type: 'Employee',
-          email: 'a@a',
+          email: 'e@e',
         })
       )
       const root = document.createElement('div')
