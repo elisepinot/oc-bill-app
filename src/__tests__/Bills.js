@@ -10,7 +10,7 @@ import { localStorageMock } from '../__mocks__/localStorage.js'
 import mockStore from '../__mocks__/store'
 import router from '../app/Router'
 import Bills from '../containers/Bills.js'
-// import userEvent from '@testing-library/user-event'
+import userEvent from '@testing-library/user-event'
 
 //Given = postulat, When = action, Then = resultat attendu
 describe('Given I am connected as an employee', () => {
@@ -51,7 +51,7 @@ describe('Given I am connected as an employee', () => {
 //Test d'intégration GET
 describe('Given I am a user connected as Employee', () => {
   describe('When I navigate to Bills', () => {
-    test('fetches bills from mock API GET', async () => {
+    test('Then  bills should be fetched from mock API (GET method)', async () => {
       Object.defineProperty(window, 'localStorage', { value: localStorageMock })
       window.localStorage.setItem(
         'user',
@@ -62,6 +62,7 @@ describe('Given I am a user connected as Employee', () => {
       document.body.append(root)
       router()
       window.onNavigate(ROUTES_PATH.Bills)
+      //onNavigate permet de simuler le comportement de la navigation entre les pages de l'application.
       const onNavigate = (pathname) => {
         document.body.innerHTML = ROUTES({ pathname })
       }
@@ -96,7 +97,7 @@ describe('Given I am a user connected as Employee', () => {
       document.body.appendChild(root)
       router()
     })
-    test('fetches bills from an API and fails with 404 message error', async () => {
+    test('Then fetching bills from an API fails with 404 message error', async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -114,7 +115,7 @@ describe('Given I am a user connected as Employee', () => {
       expect(message).toBeTruthy()
     })
 
-    test('fetches messages from an API and fails with 500 message error', async () => {
+    test('fetching messages from an API and fails with 500 message error', async () => {
       mockStore.bills.mockImplementationOnce(() => {
         return {
           list: () => {
@@ -128,6 +129,59 @@ describe('Given I am a user connected as Employee', () => {
       await new Promise(process.nextTick)
       const message = await screen.getByText(/Erreur 500/)
       expect(message).toBeTruthy()
+    })
+  })
+})
+
+describe('Given I am a user connecter as en employee', () => {
+  describe('When I click on the "Nouvelle note de frais" button on Bill page', () => {
+    test('Then I should navigate to the NewBill page', () => {
+      // const onNavigate = (pathname) => {
+      //   document.body.innerHTML = ROUTES({ pathname })
+      // }
+      const onNavigate = jest.fn()
+
+      const mockedBills = new Bills({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      })
+      mockedBills.handleClickNewBill()
+
+      // Vérifie que la méthode onNavigate a été appelée avec le bon chemin
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH['NewBill'])
+    })
+  })
+  describe('When I click on icon eye on Bill page', () => {
+    test('Then it should open the bill modal', () => {
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname })
+      }
+      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({
+          type: 'Employee',
+        })
+      )
+      document.body.innerHTML = BillsUI({ data: bills })
+      const myBills = new Bills({
+        document,
+        onNavigate,
+        store: null,
+        localStorage: window.localStorage,
+      })
+
+      $.fn.modal = jest.fn() //Permet de remplacer la méthode modal de jQuery par une fonction simulée fournie par Jest --> permet de contrôler son comportement dans les tests unitaires.
+
+      const iconEye = screen.getAllByTestId('icon-eye')[0]
+      const handleClickIconEye = jest.fn(myBills.handleClickIconEye(iconEye))
+
+      iconEye.addEventListener('click', handleClickIconEye())
+      userEvent.click(iconEye)
+      expect(handleClickIconEye).toHaveBeenCalled()
+      expect(screen.getByText('Justificatif')).toBeTruthy()
     })
   })
 })
