@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { screen, fireEvent, waitFor } from '@testing-library/dom'
+import { screen, fireEvent } from '@testing-library/dom'
 import NewBillUI from '../views/NewBillUI.js'
 import NewBill from '../containers/NewBill.js'
 import mockStore from '../__mocks__/store'
@@ -41,7 +41,6 @@ describe('Given I am a connected user on the NewBill page', () => {
     expect(formNewBill).toBeTruthy()
   })
   test('Then mail icon in vertical layout should be highlighted', async () => {
-    // await waitFor(() => screen.getByTestId('icon-mail'))
     const mailIcon = await screen.getByTestId('icon-mail')
     expect(mailIcon.classList.contains('active-icon')).toBeTruthy()
   })
@@ -84,7 +83,6 @@ describe('Given I am a connected user on the NewBill page', () => {
         })
       )
 
-      // Création d'un nouvel objet NewBill avec les dépendances mockées
       const newBill = new NewBill({
         document,
         onNavigate: jest.fn(),
@@ -92,7 +90,6 @@ describe('Given I am a connected user on the NewBill page', () => {
         localStorage: window.localStorage,
       })
 
-      // Sélection du formulaire
       const formNewBill = await screen.getByTestId('form-new-bill')
 
       // Remplissage du formulaire avec les données mockées
@@ -125,7 +122,7 @@ describe('Given I am a connected user on the NewBill page', () => {
         target: { value: mockFormData.commentary },
       })
 
-      // Ajout du fichier
+      // Ajout du fichier au bout format
       const fileInput = formNewBill.querySelector(`[data-testid="file"]`)
       fireEvent.change(fileInput, { target: { files: [mockFormData.file] } })
 
@@ -138,6 +135,49 @@ describe('Given I am a connected user on the NewBill page', () => {
         headers: { noContentType: true }, // Utilisation de l'en-tête noContentType pour empêcher le contenu-type d'être automatiquement défini
       })
       expect(newBill.onNavigate).toHaveBeenCalledWith(ROUTES_PATH.Bills)
+    })
+  })
+})
+
+describe('Given I am a connected user on the NewBill page', () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+    window.localStorage.setItem('user', JSON.stringify({ type: 'Employee' }))
+    document.body.innerHTML = `<div id="root"></div>`
+    router()
+    window.onNavigate(ROUTES_PATH.NewBill)
+  })
+
+  describe('When I try to upload an invalid file', () => {
+    test('Then an alert should be shown for non-JPEG or non-PNG files', async () => {
+      // Initialisation de NewBill
+      const newBill = new NewBill({
+        document,
+        onNavigate: jest.fn(),
+        store: mockStore,
+        localStorage: window.localStorage,
+      })
+
+      // Ajout de la fonction handleChangeFile à l'élément input
+      const input = screen.getByTestId('file')
+      input.onchange = newBill.handleChangeFile
+
+      // Mock de window.alert
+      const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {})
+
+      // Simulation de l'ajout d'un fichier non valide au format PDF
+      fireEvent.change(input, {
+        target: {
+          files: [new File([''], 'document.pdf', { type: 'application/pdf' })],
+        },
+      })
+
+      expect(alertMock).toHaveBeenCalledWith(
+        'Seuls les fichiers PNG et JPG sont autorisés'
+      )
+      expect(input.value).toBe('')
+
+      alertMock.mockRestore()
     })
   })
 })
