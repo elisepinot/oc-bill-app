@@ -110,7 +110,6 @@ describe('Given I am a user connected as Employee', () => {
       document.body.innerHTML = BillsUI({ error: 'Erreur 404' })
       //Assure que toutes les tâches de rendu asynchrones sont terminées avant de continuer avec le test.
       await new Promise(process.nextTick)
-      //Cette ligne utilise les outils de test pour rechercher un élément contenant le texte "Erreur 404" dans le DOM.
       const message = await screen.getByText(/Erreur 404/)
       expect(message).toBeTruthy()
     })
@@ -133,7 +132,7 @@ describe('Given I am a user connected as Employee', () => {
   })
 })
 
-describe('Given I am a user connecter as en employee', () => {
+describe('Given I am a user connected as en employee', () => {
   describe('When I click on the "Nouvelle note de frais" button on Bill page', () => {
     test('Then I should navigate to the NewBill page', () => {
       // const onNavigate = (pathname) => {

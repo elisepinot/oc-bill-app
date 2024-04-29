@@ -42,25 +42,26 @@ export default class {
         .list()
         .then((snapshot) => {
           // traite les données récupérées une fois la promesse résolue. Snapshot contient les données des factures sous forme brute, telles qu'elles sont retournées par la méthode list().
-          const bills = snapshot
-            .sort((a, b) => new Date(b.date) - new Date(a.date)) // Ajout du tri par ordre décroissant en transformant la string en Date
-            .map((doc) => {
-              try {
-                return {
-                  ...doc,
-                  date: formatDate(doc.date), // Conversion de la date en string après le tri seulement --> plus lisible pour l'utilisateur final
-                }
-              } catch (e) {
-                // if for some reason, corrupted data was introduced, we manage here failing formatDate function
-                // log the error and return unformatted date in that case
-                console.log(e, 'for', doc)
-                return {
-                  ...doc,
-                  date: doc.date,
-                  status: formatStatus(doc.status),
-                }
+          snapshot.sort((a, b) => new Date(b.date) - new Date(a.date)) // Ajout du tri par ordre décroissant en transformant la string en Date
+          // .sort((a, b) => (a.date < b.date ? 1 : -1))
+          const bills = snapshot.map((doc) => {
+            try {
+              return {
+                ...doc,
+                date: formatDate(doc.date), // Conversion de la date en string après le tri seulement --> plus lisible pour l'utilisateur final
+                status: formatStatus(doc.status),
               }
-            })
+            } catch (e) {
+              // if for some reason, corrupted data was introduced, we manage here failing formatDate function
+              // log the error and return unformatted date in that case
+              console.log(e, 'for', doc)
+              return {
+                ...doc,
+                date: doc.date,
+                status: formatStatus(doc.status),
+              }
+            }
+          })
           return bills
         })
     }
